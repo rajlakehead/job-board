@@ -1,7 +1,9 @@
 import {createCompany} from "@/app/actions/workosActions";
 import {getUser} from "@workos-inc/authkit-nextjs";
 
-export default async function NewCompanyPage() {
+import React from 'react'
+
+const NewCompanyPage = async () => {
   const {user} = await getUser();
   async function handleNewCompanyFormSubmit(data:FormData) {
     'use server';
@@ -13,7 +15,6 @@ export default async function NewCompanyPage() {
   if (!user) {
     'Login to use this page';
   }
-
   return (
     <div className="container">
       <h2 className="text-lg mt-6">Create a new company</h2>
@@ -33,3 +34,6 @@ export default async function NewCompanyPage() {
     </div>
   );
 }
+
+export default NewCompanyPage;
+
