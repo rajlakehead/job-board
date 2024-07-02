@@ -31,7 +31,7 @@ export default function JobRow({jobDoc}:{jobDoc:Job}) {
               <div className="text-gray-400 text-sm capitalize">
                 {jobDoc.remote}
                 {' '}&middot;{' '}
-                {jobDoc.city}, {jobDoc.country}
+                {jobDoc.city}, {jobDoc.state} {jobDoc.country}
                 {' '}&middot;{' '}
                 {jobDoc.type}-time
                 {jobDoc.isAdmin && (
