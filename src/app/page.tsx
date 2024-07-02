@@ -1,25 +1,24 @@
 import Hero from "./components/hero";
 import Jobs from "./components/jobs";
-import {
-  getSignInUrl,
-  getSignUpUrl,
-  getUser,
-  signOut,
-} from '@workos-inc/authkit-nextjs';
+import mongoose from "mongoose";
+import {getUser} from "@workos-inc/authkit-nextjs";
+import { addOrgAndUserData, JobModel } from "@/models/job";
+
+
+
 
 export default async function Home() {
-   // Retrieves the user from the session or returns `null` if no user is signed in
-   const { user } = await getUser();
+  const {user} = await getUser();
+  await mongoose.connect(process.env.MONGO_URI as string);
+  const latestJobs = await addOrgAndUserData(
+    await JobModel.find({},{},{limit:5,sort:'-createdAt'}),
+    user,
+  );
 
-   // Get the URL to redirect the user to AuthKit to sign in
-   const signInUrl = await getSignInUrl();
- 
-   // Get the URL to redirect the user to AuthKit to sign up
-   const signUpUrl = await getSignUpUrl();
   return (
     <>
       <Hero />
-      <Jobs />
+      <Jobs header="" jobs={latestJobs}  />
     </>
    
   );

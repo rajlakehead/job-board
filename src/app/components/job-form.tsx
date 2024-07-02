@@ -1,67 +1,83 @@
 'use client';
-import { faEnvelope, faPhone, faUser, faStar } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
+import {faEnvelope, faMobile, faPerson, faPhone, faStar, faUser} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {Button, RadioGroup, TextArea, TextField, Theme} from "@radix-ui/themes";
+import {redirect} from "next/navigation";
+import {useState} from "react";
 import "react-country-state-city/dist/react-country-state-city.css";
-import { CountrySelect, CitySelect, StateSelect } from "react-country-state-city";
+import {
+  CitySelect,
+  CountrySelect,
+  StateSelect,
+} from "react-country-state-city";
+import { Job } from "@/models/job";
+import { saveJobAction } from "../actions/jobActions";
 import ImageUpload from "./image-upload";
 
-export default function JobForm({orgId}:{orgId:string}) {
-  const [countryId, setCountryId] = useState(0);
-  const [stateId, setStateId] = useState(0);
-  const [cityId, setCityId] = useState(0);
-  const [countryName, setCountryName] = useState('');
-  const [stateName, setStateName] = useState('');
-  const [cityName, setCityName] = useState('');
+export default function JobForm({orgId,jobDoc}:{orgId:string;jobDoc?:Job}) {
+  const [countryId, setCountryId] = useState(jobDoc?.countryId || 0);
+  const [stateId, setStateId] = useState(jobDoc?.stateId || 0);
+  const [cityId, setCityId] = useState(jobDoc?.cityId || 0);
+  const [countryName, setCountryName] = useState(jobDoc?.country || '');
+  const [stateName, setStateName] = useState(jobDoc?.state || '');
+  const [cityName, setCityName] = useState(jobDoc?.city || '');
+
+  async function handleSaveJob(data:FormData) {
+    data.set('country', countryName.toString());
+    data.set('state', stateName.toString());
+    data.set('city', cityName.toString());
+    data.set('countryId', countryId.toString());
+    data.set('stateId', stateId.toString());
+    data.set('cityId', cityId.toString());
+    data.set('orgId', orgId);
+    const jobDoc = await saveJobAction(data);
+    redirect(`/jobs/${jobDoc.orgId}`);
+  }
 
   return (
-    <div className="container mx-auto mt-6 p-6 bg-white shadow-md rounded-md">
-      <form className="flex flex-col gap-6">
-        <input className="w-full p-3 border border-gray-300 rounded-md" name="title" placeholder="Job title" />
-        
-        <div className="grid sm:grid-cols-3 gap-6">
+    <Theme>
+      <form
+        action={handleSaveJob}
+        className="container mt-6 flex flex-col gap-4"
+      >
+        {jobDoc && (
+          <input type="hidden" name="id" value={jobDoc?._id}/>
+        )}
+        <TextField.Root name="title" placeholder="Job title" defaultValue={jobDoc?.title || ''}/>
+        <div className="grid sm:grid-cols-3 gap-6 *:grow">
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">Remote?</label>
-            <div className="flex flex-col gap-2">
-              <label className="flex items-center">
-                <input type="radio" name="remote" value="onsite" className="mr-2" /> On-site
-              </label>
-              <label className="flex items-center">
-                <input type="radio" name="remote" value="hybrid" className="mr-2" /> Hybrid-remote
-              </label>
-              <label className="flex items-center">
-                <input type="radio" name="remote" value="remote" className="mr-2" /> Fully remote
-              </label>
-            </div>
+            Remote?
+            <RadioGroup.Root defaultValue={jobDoc?.remote || 'hybrid'} name="remote">
+              <RadioGroup.Item value="onsite">On-site</RadioGroup.Item>
+              <RadioGroup.Item value="hybrid">Hybrid-remote</RadioGroup.Item>
+              <RadioGroup.Item value="remote">Fully remote</RadioGroup.Item>
+            </RadioGroup.Root>
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">Full time?</label>
-            <div className="flex flex-col gap-2">
-              <label className="flex items-center">
-                <input type="radio" name="type" value="project" className="mr-2" /> Project
-              </label>
-              <label className="flex items-center">
-                <input type="radio" name="type" value="part" className="mr-2" /> Part-time
-              </label>
-              <label className="flex items-center">
-                <input type="radio" name="type" value="full" className="mr-2" /> Full-time
-              </label>
-            </div>
+            Full time?
+            <RadioGroup.Root defaultValue={jobDoc?.type || 'full'} name="type">
+              <RadioGroup.Item value="project">Project</RadioGroup.Item>
+              <RadioGroup.Item value="part">Part-time</RadioGroup.Item>
+              <RadioGroup.Item value="full">Full-time</RadioGroup.Item>
+            </RadioGroup.Root>
           </div>
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">Salary</label>
-            <div className="flex items-center border border-gray-300 rounded-md">
-              <span className="p-2">$</span>
-              <input className="w-full p-2 border-none outline-none" name="salary" />
-              <span className="p-2">k/year</span>
-            </div>
+            Salary
+            <TextField.Root name="salary" defaultValue={jobDoc?.salary || ''}>
+              <TextField.Slot>
+                $
+              </TextField.Slot>
+              <TextField.Slot>
+                k/year
+              </TextField.Slot>
+            </TextField.Root>
           </div>
         </div>
-
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">Location</label>
-          <div className="flex flex-col sm:flex-row gap-4 font-sans">
+          Location
+          <div className="flex flex-col sm:flex-row gap-4 *:grow">
             <CountrySelect
+              defaultValue={countryId ? {id:countryId,name:countryName} : 0}
               onChange={(e:any) => {
                 setCountryId(e.id);
                 setCountryName(e.name);
@@ -69,6 +85,7 @@ export default function JobForm({orgId}:{orgId:string}) {
               placeHolder="Select Country"
             />
             <StateSelect
+              defaultValue={stateId ? {id:stateId,name:stateName} : 0}
               countryid={countryId}
               onChange={(e:any) => {
                 setStateId(e.id);
@@ -77,6 +94,7 @@ export default function JobForm({orgId}:{orgId:string}) {
               placeHolder="Select State"
             />
             <CitySelect
+              defaultValue={cityId ? {id:cityId,name:cityName} : 0}
               countryid={countryId}
               stateid={stateId}
               onChange={(e:any) => {
@@ -86,43 +104,63 @@ export default function JobForm({orgId}:{orgId:string}) {
               placeHolder="Select City"
             />
           </div>
-        </div>
 
+        </div>
         <div className="sm:flex">
           <div className="w-1/3">
-            <h3 className="mb-2 text-sm font-medium text-gray-700">Job icon</h3>
-            <ImageUpload name="jobIcon" icon={faStar} defaultValue='' />
+            <h3>Job icon</h3>
+            <ImageUpload name="jobIcon" icon={faStar} defaultValue={jobDoc?.jobIcon || ''} />
           </div>
           <div className="grow">
-            <h3 className="mb-2 text-sm font-medium text-gray-700">Contact person</h3>
-            <div className="flex gap-4">
-              <div>
-                <ImageUpload name="contactPhoto" icon={faUser} defaultValue='' />
+            <h3>Contact person</h3>
+            <div className="flex gap-2">
+              <div className="">
+                <ImageUpload name="contactPhoto" icon={faUser} defaultValue={jobDoc?.contactPhoto || ''} />
               </div>
-              <div className="grow flex flex-col gap-3">
-                <div className="flex items-center border border-gray-300 rounded-md p-2">
-                  <FontAwesomeIcon icon={faUser} />
-                  <input className="w-full ml-2 border-none outline-none" placeholder="John Doe" name="contactName" />
-                </div>
-                <div className="flex items-center border border-gray-300 rounded-md p-2">
-                  <FontAwesomeIcon icon={faPhone} />
-                  <input className="w-full ml-2 border-none outline-none" placeholder="Phone" type="tel" name="contactPhone" />
-                </div>
-                <div className="flex items-center border border-gray-300 rounded-md p-2">
-                  <FontAwesomeIcon icon={faEnvelope} />
-                  <input className="w-full ml-2 border-none outline-none" placeholder="Email" type="email" name="contactEmail" />
-                </div>
+              <div className="grow flex flex-col gap-1">
+                <TextField.Root
+                  placeholder="John Doe"
+                  name="contactName"
+                  defaultValue={jobDoc?.contactName || ''}>
+                  <TextField.Slot>
+                    <FontAwesomeIcon icon={faUser}/>
+                  </TextField.Slot>
+                </TextField.Root>
+                <TextField.Root
+                  placeholder="Phone"
+                  type="tel"
+                  name="contactPhone"
+                  defaultValue={jobDoc?.contactPhone || ''}
+                >
+                  <TextField.Slot>
+                    <FontAwesomeIcon icon={faPhone}/>
+                  </TextField.Slot>
+                </TextField.Root>
+                <TextField.Root
+                  placeholder="Email"
+                  type="email"
+                  name="contactEmail"
+                  defaultValue={jobDoc?.contactEmail || ''}
+                >
+                  <TextField.Slot>
+                    <FontAwesomeIcon icon={faEnvelope}/>
+                  </TextField.Slot>
+                </TextField.Root>
               </div>
             </div>
           </div>
         </div>
-
-        <textarea className="w-full p-3 border border-gray-300 rounded-md resize-vertical" placeholder="Job description" name="description"></textarea>
-        
+        <TextArea
+          defaultValue={jobDoc?.description || ''}
+          placeholder="Job description"
+          resize="vertical"
+          name="description" />
         <div className="flex justify-center">
-          <button className="px-8 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
+          <Button size="3">
+            <span className="px-8">Save</span>
+          </Button>
         </div>
       </form>
-    </div>
+    </Theme>
   );
 }
