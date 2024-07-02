@@ -5,6 +5,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import Link from "next/link";
 import TimeAgo from "./TImeAgo";
+import Image from "next/image";
 
 
 export default function JobRow({jobDoc}:{jobDoc:Job}) {
@@ -16,8 +17,10 @@ export default function JobRow({jobDoc}:{jobDoc:Job}) {
         </div>
         <div className="flex grow gap-4">
           <div className="content-center w-12 basis-12 shrink-0">
-            <img
+            <Image
               className="size-12"
+              width={1}
+              height={1}
               src={jobDoc?.jobIcon} alt=""/>
           </div>
           <div className="grow sm:flex">
